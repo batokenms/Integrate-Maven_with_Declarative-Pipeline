@@ -1,0 +1,31 @@
+node{
+    stage("This is the Cloning Stage"){
+        git branch: 'main', credentialsId: 'GIT_HUB_CREDENTIALS', url: 'https://github.com/batokenms/spring-boot-mongo-docker.git'
+    }
+    stage("Maven Clean Packages Build"){
+        def mavenHome = tool name: "Maven-3.8.6", type: "maven"
+        def mavenCMD = "${mavenHome}/bin/mvn"
+        sh "${mavenCMD} clean package"
+    }
+    stage("Build Docker Image"){
+        sh "docker version"
+        sh "docker build -t jean-httpd ."
+    }
+    stage("Docker Image list"){
+
+        sh "docker image list"
+    }
+    stage("Docker Image Tag"){
+
+        sh "docker tag jean-httpd jeanp12/jean-httpd:jean-httpd"
+    }
+    stage("Docker Login to Hub Docker"){
+     withCredentials([string(credentialsId: 'GIT_HUB_CREDENTIALS15', variable: 'DOCKER_HUB')]) {
+        sh "echo '$DOCKER_HUB' | docker login -u jeanp12 --password-stdin "
+        }
+    }
+    stage("Pushing the image application to the staging area of production"){
+        
+        sh "docker push jeanp12/jean-httpd:jean-httpd"
+    }
+}
